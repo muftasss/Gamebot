@@ -122,6 +122,10 @@ def load_plugins(application: Application) -> None:
 # MAIN
 # ============================================================
 
+# ============================================================
+# MAIN
+# ============================================================
+
 def main() -> None:
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing from config.py")
@@ -139,6 +143,7 @@ def main() -> None:
 
     logger.info("All available plugins loaded. Starting polling...")
 
+    init_db()
     application.run_polling()
 
 
