@@ -68,10 +68,10 @@ DB_PATH = os.getenv(
 # Add Telegram file_id later.
 # Leave empty for now.
 
-START_IMAGE = os.getenv("START_IMAGE", "https://graph.org/file/0591ce5558c3ec8fe7612-263292508134daf3e1.jpg").strip()
-HELP_IMAGE = os.getenv("HELP_IMAGE", "https://graph.org/file/fdc4357abfaba23255e98-24d1bbfa3888cdfcfe.jpg").strip()
-PROFILE_IMAGE = os.getenv("PROFILE_IMAGE", "https://graph.org/file/0591ce5558c3ec8fe7612-263292508134daf3e1.jpg").strip()
-RANKING_IMAGE = os.getenv("RANKING_IMAGE", "https://graph.org/file/fdc4357abfaba23255e98-24d1bbfa3888cdfcfe.jpg").strip()
+START_IMAGE = os.getenv("START_IMAGE", "https://graph.org/file/ce4e5c050581bf266cc3e-d11227e9ab25c35e24.jpg").strip()
+HELP_IMAGE = os.getenv("HELP_IMAGE", "https://graph.org/file/423d700af2fe27a279022-c2c4fd06eb5e7ffeeb.jpg").strip()
+PROFILE_IMAGE = os.getenv("PROFILE_IMAGE", "https://graph.org/file/5542a620b4467f2002ac7-1e37b54ac99831006b.jpg").strip()
+RANKING_IMAGE = os.getenv("RANKING_IMAGE", "https://api.telegram.org/bot8972387698:AAGy3VGTEu9Tnq7bJFBfADKJpWMRSfSkJFU/sendMessage").strip()
 BATTLE_IMAGE = os.getenv("BATTLE_IMAGE", "https://graph.org/file/0591ce5558c3ec8fe7612-263292508134daf3e1.jpg").strip()
 DAILY_IMAGE = os.getenv("DAILY_IMAGE", "https://graph.org/file/fdc4357abfaba23255e98-24d1bbfa3888cdfcfe.jpg").strip()
 SHOP_IMAGE = os.getenv("SHOP_IMAGE", "https://graph.org/file/0591ce5558c3ec8fe7612-263292508134daf3e1.jpg").strip()
