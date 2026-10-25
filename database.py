@@ -345,4 +345,48 @@ def get_coins(
 # XP
 # ============================================================
 
-def add_xp() s
+# ============================================================
+# XP
+# ============================================================
+
+def add_xp(
+    user_id: int,
+    amount: int,
+) -> None:
+    """Add XP and update the user's level."""
+
+    ensure_user(user_id)
+    connection = get_connection()
+
+    try:
+        connection.execute(
+            """
+            UPDATE users
+            SET xp = MAX(0, xp + ?),
+                updated_at = ?
+            WHERE user_id = ?
+            """,
+            (amount, utc_now(), user_id),
+        )
+
+        row = connection.execute(
+            "SELECT xp FROM users WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+
+        if row:
+            new_level = max(1, int(row["xp"]) // 100 + 1)
+
+            connection.execute(
+                """
+                UPDATE users
+                SET level = ?, updated_at = ?
+                WHERE user_id = ?
+                """,
+                (new_level, utc_now(), user_id),
+            )
+
+        connection.commit()
+
+    finally:
+        connection.close()
