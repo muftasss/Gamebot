@@ -390,3 +390,181 @@ def add_xp(
 
     finally:
         connection.close()
+
+
+# ============================================================
+# GAME DATABASE HELPERS
+# ============================================================
+
+def increment_stat(user_id: int, stat: str) -> None:
+    allowed = {"battles", "wins", "losses", "hunts", "messages"}
+    if stat not in allowed:
+        raise ValueError(f"Invalid stat: {stat}")
+
+    ensure_user(user_id)
+    connection = get_connection()
+    try:
+        connection.execute(
+            f"UPDATE users SET {stat} = {stat} + 1, updated_at = ? WHERE user_id = ?",
+            (utc_now(), user_id),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def add_history(user_id: int, action: str, result: str = "", reward: int = 0) -> None:
+    ensure_user(user_id)
+    connection = get_connection()
+    try:
+        connection.execute(
+            "INSERT INTO history (user_id, action, result, reward, created_at) VALUES (?, ?, ?, ?, ?)",
+            (user_id, action, result, reward, utc_now()),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def get_cooldown(user_id: int, action: str) -> float:
+    connection = get_connection()
+    try:
+        row = connection.execute(
+            "SELECT last_used FROM cooldowns WHERE user_id = ? AND action = ?",
+            (user_id, action),
+        ).fetchone()
+        return float(row["last_used"]) if row else 0.0
+    finally:
+        connection.close()
+
+
+def set_cooldown(user_id: int, action: str, last_used: float) -> None:
+    connection = get_connection()
+    try:
+        connection.execute(
+            """INSERT INTO cooldowns (user_id, action, last_used)
+               VALUES (?, ?, ?)
+               ON CONFLICT(user_id, action)
+               DO UPDATE SET last_used = excluded.last_used""",
+            (user_id, action, last_used),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def add_group_member(chat_id: int, user_id: int) -> None:
+    now = utc_now()
+    connection = get_connection()
+    try:
+        connection.execute(
+            """INSERT INTO group_members (chat_id, user_id, joined_at, updated_at)
+               VALUES (?, ?, ?, ?)
+               ON CONFLICT(chat_id, user_id)
+               DO UPDATE SET updated_at = excluded.updated_at""",
+            (chat_id, user_id, now, now),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def get_group_ranking(chat_id: int, limit: int = 10) -> list:
+    connection = get_connection()
+    try:
+        rows = connection.execute(
+            """SELECT u.*
+               FROM group_members AS gm
+               JOIN users AS u ON u.user_id = gm.user_id
+               WHERE gm.chat_id = ?
+               ORDER BY u.level DESC, u.xp DESC, u.coins DESC
+               LIMIT ?""",
+            (chat_id, max(1, limit)),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        connection.close()
+
+
+def set_level(user_id: int, level: int) -> None:
+    ensure_user(user_id)
+    connection = get_connection()
+    try:
+        connection.execute(
+            "UPDATE users SET level = ?, updated_at = ? WHERE user_id = ?",
+            (max(1, level), utc_now(), user_id),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def get_last_daily_claim(user_id: int):
+    connection = get_connection()
+    try:
+        row = connection.execute(
+            "SELECT last_claim FROM daily_rewards WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+        return row["last_claim"] if row else None
+    finally:
+        connection.close()
+
+
+def set_daily_claim(user_id: int) -> None:
+    connection = get_connection()
+    try:
+        connection.execute(
+            """INSERT INTO daily_rewards (user_id, last_claim) VALUES (?, ?)
+               ON CONFLICT(user_id)
+               DO UPDATE SET last_claim = excluded.last_claim""",
+            (user_id, utc_now()),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def get_last_weekly_claim(user_id: int):
+    connection = get_connection()
+    try:
+        row = connection.execute(
+            "SELECT last_claim FROM weekly_rewards WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+        return row["last_claim"] if row else None
+    finally:
+        connection.close()
+
+
+def set_weekly_claim(user_id: int) -> None:
+    connection = get_connection()
+    try:
+        connection.execute(
+            """INSERT INTO weekly_rewards (user_id, last_claim) VALUES (?, ?)
+               ON CONFLICT(user_id)
+               DO UPDATE SET last_claim = excluded.last_claim""",
+            (user_id, utc_now()),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def reset_user(user_id: int) -> None:
+    ensure_user(user_id)
+    connection = get_connection()
+    try:
+        connection.execute(
+            """UPDATE users SET level = ?, xp = ?, coins = ?,
+               battles = 0, wins = 0, losses = 0, hunts = 0,
+               messages = 0, updated_at = ? WHERE user_id = ?""",
+            (STARTING_LEVEL, STARTING_XP, STARTING_COINS, utc_now(), user_id),
+        )
+        connection.execute("DELETE FROM history WHERE user_id = ?", (user_id,))
+        connection.execute("DELETE FROM cooldowns WHERE user_id = ?", (user_id,))
+        connection.execute("DELETE FROM daily_rewards WHERE user_id = ?", (user_id,))
+        connection.execute("DELETE FROM weekly_rewards WHERE user_id = ?", (user_id,))
+        connection.commit()
+    finally:
+        connection.close()
