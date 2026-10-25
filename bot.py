@@ -1,6 +1,6 @@
 import logging
 import importlib
-
+from database import init_db
 from telegram import BotCommand
 from telegram.ext import Application
 
