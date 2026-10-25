@@ -345,15 +345,4 @@ def get_coins(
 # XP
 # ============================================================
 
-def add_xp(
-    user_id: int,
-    amount: int,
-) -> None:
-    """Add XP to a user."""
-
-    ensure_user(user_id)
-
-    connection = get_connection()
-
-    try:
-       
+def add_xp() s
